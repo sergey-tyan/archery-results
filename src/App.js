@@ -10,6 +10,50 @@ import {
     Text,
     View
 } from 'react-native';
+import moment from 'moment';
+
+const ThreeXTen = '3x10';
+const SixXSix = '6x6';
+
+const sample = [
+    {
+        date: moment().format("YYYY.MM.DD HH:mm"),
+        total: 234,
+        distance: 70,
+        points: {
+            type: ThreeXTen,
+            scores:[[9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10],
+                [9, 9, 10]]
+        }
+    },
+    {
+        date: moment().format("YYYY.MM.DD HH:mm"),
+        total: 150,
+        distance: 70,
+        points: {
+            type: SixXSix,
+            scores:[[9, 9, 10, 10, 10, 10],
+                [9, 9, 10, 10, 10, 10],
+                [9, 9, 10, 10, 10, 10],
+                [9, 9, 10, 10, 10, 10],
+                [9, 9, 10, 10, 10, 10],
+                [9, 9, 10, 10, 10, 10]]
+        }
+    },
+
+];
+
+class Item extends Component {
+
+}
 
 export default class App extends Component {
     render() {
