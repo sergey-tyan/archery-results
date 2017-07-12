@@ -89,8 +89,8 @@ export default class Main extends Component {
         });
         this.state = {
             dataSource: ds.cloneWithRows(sample),
-            modalVisible: false,
-            shootingMode: ARROWS_3
+            modalVisible: false
+
         }
     }
 
@@ -123,30 +123,23 @@ export default class Main extends Component {
 
 
                 <View style={styles.rowContainer}>
-                    <Text style={styles.modalText}>6 x 6</Text>
-                    <Switch
-                        disabled={false}
-                        value={this.state.shootingMode === ARROWS_3}
-                        onValueChange={(val) => this.setState({shootingMode: val ? ARROWS_3 : ARROWS_6})}
-                        onTintColor='#d6e5ff'
-                        tintColor='#d6e5ff'
-                        thumbTintColor='#4286f4'
-                    />
-                    <Text style={styles.modalText}>3 x 10</Text>
-
-                </View>
-
-
-                <View style={styles.rowContainer}>
-
                     <Button
-                        title={'Start'}
+                        title={'Outdoor 6 arrows x 6 rounds'}
                         color={'#6bf442'}
                         onPress={() => {
                             this.setModalVisible(false);
-                            this.props.navigation.navigate('Points',{ mode:this.state.shootingMode });
+                            this.props.navigation.navigate('Points',{ mode:ARROWS_6 });
                         }}
                     />
+                    <Button
+                        title={'Indoor 3 arrows x 10 rounds'}
+                        color={'#609dff'}
+                        onPress={() => {
+                            this.setModalVisible(false);
+                            this.props.navigation.navigate('Points',{ mode:ARROWS_3 });
+                        }}
+                    />
+
                     <Button
                         title={'Cancel'}
                         color={'#e84a4a'}
@@ -204,11 +197,12 @@ const styles = StyleSheet.create({
         borderColor: 'red',
     },
     rowContainer: {
-        flexDirection: 'row',
+
         margin: 10
     },
     modalText: {
         fontSize: 18,
+        margin:5
     },
     itemContainer: {
         height: 50,
