@@ -1,14 +1,29 @@
 import React, { Component } from "react";
-import { StyleSheet, Text, View, Dimensions, TouchableHighlight, ScrollView, Platform, Button } from "react-native";
-import { ARROWS_3 } from "./constants";
+import {
+    Clipboard,
+    StyleSheet,
+    Text,
+    View,
+    Dimensions,
+    TouchableHighlight,
+    ScrollView,
+    Platform,
+    Button,
+    Alert
+} from "react-native";
+import {
+    AdMobInterstitial
+} from 'react-native-admob';
+
+import { ARROWS_3, ANDROID_AD_ID, IOS_AD_ID  } from "./constants";
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
-
-const GridItem = ({ value, isTotal, itemSelected, selected }) => {
+import realm from './Realm';
+const GridItem = ({value, isTotal, itemSelected, selected}) => {
     return (
-        <TouchableHighlight onPress={()=>{
-            if(!isTotal){
+        <TouchableHighlight onPress={() => {
+            if (!isTotal) {
                 itemSelected();
             }
         }}>
@@ -21,16 +36,62 @@ const GridItem = ({ value, isTotal, itemSelected, selected }) => {
 
 
 export default class Points extends Component {
-
-
-    static navigationOptions = (Platform.OS === 'android') ? { header: null } : {};
-
+    static navigationOptions = (Platform.OS === 'android') ? {header: null} : {};
 
     constructor(props) {
         super(props);
+        AdMobInterstitial.requestAd();
+        AdMobInterstitial.isReady(()=> {
+            this.setState({canShowAd: true})
+        });
+
+
+
+    }
+
+    componentWillMount() {
+        let currentId;
+        let dbItem = null;
+
+        let ended = false;
+        if (this.props.navigation.state.params.lastId) {
+            currentId = this.props.navigation.state.params.lastId + 1;
+            realm.write(() => {
+                dbItem = realm.create('Result', {
+                    id: currentId,
+                    creationDate: new Date(),
+                    done: false,
+                    total: 0,
+                    points: [],
+                    type: this.props.navigation.state.params.mode
+                })
+            });
+        } else if (this.props.navigation.state.params.itemId) {
+            const items = realm.objects('Result').filtered('id == $0', this.props.navigation.state.params.itemId);
+            dbItem = items[0];
+            currentId = dbItem.id;
+            ended = dbItem.done;
+        } else {
+            currentId = 1;
+        }
+
+        const grid = this.createGrid(dbItem);
+        this.setState({
+            grid,
+            showKeyboard: false,
+            selectedItem: {row: 0, col: 0},
+            ended,
+            currentId,
+            dbItem
+        });
+    }
+
+    createGrid(item) {
+
         let grid = [];
         let maxCol;
         let maxRow;
+
         if (this.props.navigation.state.params.mode === ARROWS_3) {
             maxCol = 3;
             maxRow = 10;
@@ -38,32 +99,35 @@ export default class Points extends Component {
             maxCol = 6;
             maxRow = 6;
         }
-
-        for (let i = 0; i < maxRow; i++) {
-            let row = [];
-            for (let j = 0; j < maxCol; j++) {
-                row.push('');
+        this.setState({maxCol, maxRow});
+        if (item) {
+            let valuesArray = item.points.map(point => point.value);
+            for (let i = 0; i < maxRow; i++) {
+                let row = [];
+                for (let j = 0; j < maxCol; j++) {
+                    row.push(valuesArray[i * maxRow + j]);
+                }
+                grid.push(row);
             }
-            grid.push(row);
+        } else {
+            for (let i = 0; i < maxRow; i++) {
+                let row = [];
+                for (let j = 0; j < maxCol; j++) {
+                    row.push('');
+                }
+                grid.push(row);
+            }
         }
 
-        this.state = {
-            grid,
-            showKeyboard: false,
-            selectedItem: { row: 0, col: 0 },
-            maxCol,
-            maxRow,
-            ended: false,
-            total: 0
-        };
+        return grid;
     }
 
     renderRow(row, rowNum) {
         let rows = row.map((item, colNum) => {
             const selected = (rowNum === this.state.selectedItem.row && colNum === this.state.selectedItem.col)
             return <GridItem value={item} selected={selected} key={colNum} itemSelected={
-                ()=> {
-                    this.setState({showKeyboard:true, selectedItem: {row: rowNum, col: colNum}});
+                () => {
+                    this.setState({showKeyboard: true, selectedItem: {row: rowNum, col: colNum}});
                 }
             }/>;
         });
@@ -72,14 +136,14 @@ export default class Points extends Component {
             if (value === 'X') {
                 value = 10;
             }
-            if (value === '') {
+            if (value === '' || value === undefined) {
                 value = 0;
             }
             return sum + parseInt(value);
         }, 0);
 
         rows.push(<GridItem value={total} isTotal key={row.length + 1}/>);
-        return (<View style={{flexDirection:'row'}} key={rowNum}>{rows}</View>)
+        return (<View style={{flexDirection: 'row'}} key={rowNum}>{rows}</View>)
     }
 
     renderGrid() {
@@ -92,21 +156,19 @@ export default class Points extends Component {
     renderKeyboard() {
         return (
             <View style={styles.keyboard}>
-                <View style={{flexDirection:'row'}}>
-
+                <View style={{flexDirection: 'row'}}>
                     {this.renderKeyboardItem(8)}
                     {this.renderKeyboardItem(9)}
                     {this.renderKeyboardItem(10)}
                     {this.renderKeyboardItem('X')}
                 </View>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                     {this.renderKeyboardItem(4)}
                     {this.renderKeyboardItem(5)}
                     {this.renderKeyboardItem(6)}
                     {this.renderKeyboardItem(7)}
-
                 </View>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                     {this.renderKeyboardItem(0)}
                     {this.renderKeyboardItem(1)}
                     {this.renderKeyboardItem(2)}
@@ -123,7 +185,7 @@ export default class Points extends Component {
         let newGrid = this.state.grid;
         const curRow = this.state.selectedItem.row;
         const curCol = this.state.selectedItem.col;
-        if(curRow > -1 && curCol > -1) {
+        if (curRow > -1 && curCol > -1) {
 
             newGrid[this.state.selectedItem.row][this.state.selectedItem.col] = value;
 
@@ -133,28 +195,49 @@ export default class Points extends Component {
                         showKeyboard: false,
                         grid: newGrid,
                         ended: true,
-                        selectedItem: { row: -1, col: -1 }
+                        selectedItem: {row: -1, col: -1}
+                    }, () => {
+                        if(this.state.canShowAd){
+                            AdMobInterstitial.showAd();
+                        }
+                        this.updateRealm();
                     });
                 } else {
                     this.setState({
                         grid: newGrid,
-                        selectedItem: { row: curRow + 1, col: 0 }
-                    });
+                        selectedItem: {row: curRow + 1, col: 0}
+                    }, () => this.updateRealm());
                 }
             } else {
                 this.setState({
                     grid: newGrid,
-                    selectedItem: { row: curRow, col: curCol + 1 }
-                });
+                    selectedItem: {row: curRow, col: curCol + 1}
+                }, () => this.updateRealm());
             }
         }
     }
 
+    updateRealm() {
+        const resultItems = this.countTotal();
+        realm.write(() => {
+            realm.create('Result', {
+                id: this.state.currentId,
+                creationDate: new Date(),
+                done: this.state.ended,
+                total: resultItems.total,
+                points: resultItems.items,
+                type: this.props.navigation.state.params.mode
+            }, true)
+        });
+    }
+
     renderKeyboardItem(value) {
         return (
-            <TouchableHighlight onPress={()=>{
-                this.updateSelectedItem(value);
-            }}>
+            <TouchableHighlight
+                underlayColor='#b1bed6'
+                onPress={() => {
+                    this.updateSelectedItem(value);
+                }}>
                 <View style={styles.keyboardItem}>
                     <Text style={styles.keyboardItemValue}>{value}</Text>
                 </View>
@@ -162,60 +245,107 @@ export default class Points extends Component {
         )
     };
 
-    countTotal(){
+    countTotal() {
         let allRows = this.state.grid.reduce((row, value) => {
             return row.concat(value);
         }, []);
 
-        let total = allRows.reduce((num, value)=>{
+        let total = allRows.reduce((num, value) => {
 
             if (value === 'X') {
                 value = 10;
             }
-            if (value === '') {
+            if (value === '' || value === undefined) {
                 value = 0;
             }
             return num + parseInt(value);
-        },0);
+        }, 0);
+
+        let items = allRows.map((value) => {
+            return {value: value === undefined ? '0' : value.toString()};
+        });
 
         // this.setState({total});
-        return total;
+        return {total, items};
+    }
+
+    copyToClipboard() {
+        let text = '';
+        let total = 0;
+        for (let i = 0; i < this.state.maxRow; i++) {
+            let curSum = 0;
+            for (let j = 0; j < this.state.maxCol; j++) {
+                text += this.state.grid[i][j] + ' | '
+                let val = this.state.grid[i][j];
+                if (val === 'X') {
+                    val = 10;
+                }
+                if (val === '') {
+                    val = 0;
+                }
+                curSum += parseInt(val);
+            }
+            text += '-' + curSum + '-\n';
+            total += curSum;
+        }
+
+        text += 'Total: ' + total;
+        Clipboard.setString(text);
+    }
+
+    showAlert(){
+        Alert.alert(
+            null,
+            'Confirm removing Result',
+            [
+                {text: 'Remove', onPress: () => {
+                    if (this.state.dbItem) {
+                        realm.write(() => {
+                            realm.delete(this.state.dbItem);
+                        });
+                    }
+                    this.props.navigation.goBack();
+                }},
+                {text: 'Cancel', style: 'cancel'}
+            ],
+            { cancelable: true }
+        )
     }
 
     render() {
         return (
-            <View style={{flex:1}}>
+            <View style={{flex: 1}}>
                 <ScrollView contentContainerStyle={styles.scroll}>
                     {this.renderGrid()}
-                    <Text style={styles.totalText}>Total: {this.countTotal()}</Text>
-
-                    <View style={{flexDirection:'row', flex: 1}}>
+                    <Text style={styles.totalText}>Total: {this.countTotal().total}</Text>
+                    <View style={{flex: 1, justifyContent: 'flex-start'}}>
                         {
                             this.state.showKeyboard &&
-                            (<View style={{flex: 1}}>
+                            (<View>
                                 <Button
-
-                                title={'Done'}
-                                onPress={()=>this.setState({showKeyboard:false})}
+                                    title={'Done'}
+                                    onPress={() => this.setState({showKeyboard: false})}
                                 />
                             </View>)
                         }
-                        {
-                            this.state.ended &&
-                            (<View style={{flex: 1}}>
-                                <Button
-                                    style={{flex: 1}}
-                                    title={'Copy'}
-                                    onPress={()=>alert('copied')}
-                                />
-                            </View>)
-                        }
+                        <View>
+                            <Button
+                                title={'Copy'}
+                                color={'#3fdb83'}
+                                onPress={() => this.copyToClipboard()}
+                            />
+                        </View>
+                        <View>
+                            <Button
+                                color={'#e84a4a'}
+                                title={'Remove'}
+                                onPress={() => {this.showAlert()}}
+                            />
+                        </View>
                     </View>
 
                 </ScrollView>
-
                 {this.state.showKeyboard && this.renderKeyboard()}
-
             </View>
         )
     }
@@ -225,8 +355,9 @@ export default class Points extends Component {
 
 const styles = StyleSheet.create({
     scroll: {
-        height: height,
-        margin: 5
+        height: height + 50,
+        margin: 5,
+        alignSelf: 'center'
     },
     gridItem: {
         width: width / 8,
@@ -248,7 +379,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
 
     },
-    gridItemTotal:{
+    gridItemTotal: {
         width: width / 8,
         height: width / 8,
         backgroundColor: '#486087',
@@ -256,34 +387,33 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         alignContent: 'center',
         justifyContent: 'center',
-
     },
-
     gridItemValue: {
         alignSelf: 'center',
         fontSize: 20
     },
     keyboardItem: {
         width: width / 4 - 5,
-        height: width / 4 - 5,
-        backgroundColor: 'white',
-        borderColor: 'black',
-        borderWidth: 1,
+        height: width / 4 - 35,
+        backgroundColor: '#d6e5ff',
+        borderColor: '#82afff',
+        borderWidth: 2,
         alignContent: 'center',
         justifyContent: 'center',
-        borderRadius: 10
+        borderRadius: 5,
+        margin: 2
     },
     keyboardItemValue: {
         alignSelf: 'center',
         fontSize: 40
     },
-    keyboard:{
-        margin:5,
-        alignSelf:'center'
+    keyboard: {
+        margin: 5,
+        alignSelf: 'center'
     },
-    totalText:{
-        fontSize:25,
-        alignSelf:'center'
+    totalText: {
+        fontSize: 25,
+        alignSelf: 'center'
     }
 
 

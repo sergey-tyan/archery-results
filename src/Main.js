@@ -10,18 +10,18 @@ import {
     Text,
     View,
     Dimensions,
-    ListView,
     Button,
     Modal,
-    Switch
+    TouchableHighlight
 } from 'react-native';
 
 import moment from 'moment';
-
+import realm from './Realm';
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 import { ARROWS_3, ARROWS_6 } from './constants';
+import { ListView } from 'realm/react-native';
 
 const sample = [
     {
@@ -77,20 +77,47 @@ export default class Main extends Component {
     static navigationOptions = ({navigation}) => {
         return {
             title: 'Archery Results',
-            headerRight: <Button title="Add new" onPress={() => navigation.state.params.setModalVisible(true)}/>
+            headerRight: <Button title="Add new" onPress={() => navigation.state.params.setModalVisible(true)}/>,
+            headerLeft: <Button title="Info" onPress={() => navigation.navigate('Info')}/>
         }
     };
 
     constructor(props) {
         super(props);
-
+        console.log('CONSTRUCTOR LOGS');
         const ds = new ListView.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2
         });
-        this.state = {
-            dataSource: ds.cloneWithRows(sample),
-            modalVisible: false
+        this.resultItems = realm.objects('Result').sorted('creationDate', true);
+        // if (this.resultItems.length < 1) {
+        //     realm.write(() => {
+        //         realm.create('Result', {
+        //             id:1,
+        //             creationDate: new Date(),
+        //             done: false,
+        //             total: 300,
+        //             points: [{value: 'X'}, {value: '10'}, {value: 'X'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}],
+        //             type: ARROWS_3
+        //         });
+        //     });
+        // }
+        let lastId = 0;
+        if(this.resultItems.length > 0){
+            lastId = this.resultItems[0].id;
+        }
 
+        this.resultItems.addListener((collection) => {
+            if(collection.length > 0) {
+                lastId = collection[0].id;
+            }
+
+            this.setState({lastId, dataSource: ds.cloneWithRows(collection)});
+        });
+
+        this.state = {
+            dataSource: ds.cloneWithRows(this.resultItems),
+            modalVisible: false,
+            lastId
         }
     }
 
@@ -105,30 +132,38 @@ export default class Main extends Component {
 
     renderItem(item) {
         return (
-            <View style={styles.itemContainer}>
-                <Text style={styles.itemText}>
-                    {item.total}
-                </Text>
-            </View>
+            <TouchableHighlight onPress={()=>{
+                this.props.navigation.navigate('Points',{ mode:item.type, itemId: item.id })
+            }}>
+                <View style={styles.itemContainer}>
+                    <View style={item.done ? styles.totalDone : styles.totalProgress}>
+                        <Text style={styles.itemText}>
+                            {item.total}{item.type === ARROWS_3 ? '/300' : '/360'}
+                        </Text>
+                    </View>
+                    <View style={styles.date}>
+                        <Text style={styles.itemText}>
+                            {moment(item.creationDate).format("YYYY.MM.DD HH:mm")}
+                        </Text>
+                    </View>
+                </View>
+            </TouchableHighlight>
         )
     }
 
     renderModal() {
         return (
             <View style={styles.modalContainer}>
-
                 <Text style={styles.modalText}>
                     Shooting mode
                 </Text>
-
-
                 <View style={styles.rowContainer}>
                     <Button
                         title={'Outdoor 6 arrows x 6 rounds'}
-                        color={'#6bf442'}
+                        color={'#3fdb83'}
                         onPress={() => {
                             this.setModalVisible(false);
-                            this.props.navigation.navigate('Points',{ mode:ARROWS_6 });
+                            this.props.navigation.navigate('Points',{ mode:ARROWS_6, lastId: this.state.lastId });
                         }}
                     />
                     <Button
@@ -136,10 +171,9 @@ export default class Main extends Component {
                         color={'#609dff'}
                         onPress={() => {
                             this.setModalVisible(false);
-                            this.props.navigation.navigate('Points',{ mode:ARROWS_3 });
+                            this.props.navigation.navigate('Points',{ mode:ARROWS_3, lastId: this.state.lastId });
                         }}
                     />
-
                     <Button
                         title={'Cancel'}
                         color={'#e84a4a'}
@@ -159,7 +193,7 @@ export default class Main extends Component {
                     visible={this.state.modalVisible}
                     supportedOrientations={['portrait']}
                     onRequestClose={() => {
-                        alert("Modal has been closed.")
+                        this.setModalVisible(false);
                     }}
                 >
                     {this.renderModal()}
@@ -197,7 +231,6 @@ const styles = StyleSheet.create({
         borderColor: 'red',
     },
     rowContainer: {
-
         margin: 10
     },
     modalText: {
@@ -206,26 +239,36 @@ const styles = StyleSheet.create({
     },
     itemContainer: {
         height: 50,
-        width: width - 30,
-        borderRadius: 6,
-        justifyContent: 'center',
+        width: width,
+        justifyContent: 'flex-start',
         alignSelf: 'center',
-        marginTop: 10,
         borderWidth: 1,
         borderStyle: 'solid',
-        borderColor: 'black'
+        borderColor: '#21a5d1',
+        flexDirection:'row'
     },
     itemText: {
         fontSize: 20,
         textAlign: 'center',
         margin: 10,
-        color: 'black'
+        color: 'black',
     },
-
     list: {
         flexDirection: 'column',
         width: width,
         marginBottom: 10,
     },
+    totalDone:{
+        backgroundColor:'#3fdb83',
+        width: width/2
+    },
+    totalProgress:{
+        backgroundColor:'#def24b',
+        width: width/2
+    },
+    date:{
+        width: width/2,
+        backgroundColor:'#aac8ff'
+    }
 });
 
