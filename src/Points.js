@@ -62,7 +62,7 @@ export default class Points extends Component {
         let dbItem = null;
 
         let ended = false;
-        if (this.props.navigation.state.params.lastId) {
+        if (this.props.navigation.state.params.lastId != undefined) {
             currentId = this.props.navigation.state.params.lastId + 1;
             realm.write(() => {
                 dbItem = realm.create('Result', {
@@ -74,7 +74,7 @@ export default class Points extends Component {
                     type: this.props.navigation.state.params.mode
                 })
             });
-        } else if (this.props.navigation.state.params.itemId) {
+        } else if (this.props.navigation.state.params.itemId != undefined) {
             const items = realm.objects('Result').filtered('id == $0', this.props.navigation.state.params.itemId);
             dbItem = items[0];
             currentId = dbItem.id;
@@ -95,7 +95,6 @@ export default class Points extends Component {
     }
 
     createGrid(item) {
-
         let grid = [];
         let maxCol;
         let maxRow;
@@ -113,7 +112,7 @@ export default class Points extends Component {
             for (let i = 0; i < maxRow; i++) {
                 let row = [];
                 for (let j = 0; j < maxCol; j++) {
-                    row.push(valuesArray[i * maxRow + j]);
+                    row.push(valuesArray[i * maxCol + j]);
                 }
                 grid.push(row);
             }
@@ -194,9 +193,7 @@ export default class Points extends Component {
         const curRow = this.state.selectedItem.row;
         const curCol = this.state.selectedItem.col;
         if (curRow > -1 && curCol > -1) {
-
             newGrid[this.state.selectedItem.row][this.state.selectedItem.col] = value;
-
             if (curCol + 1 === this.state.maxCol) {
                 if (curRow + 1 === this.state.maxRow) {
                     this.setState({
@@ -230,7 +227,6 @@ export default class Points extends Component {
         realm.write(() => {
             realm.create('Result', {
                 id: this.state.currentId,
-                creationDate: new Date(),
                 done: this.state.ended,
                 total: resultItems.total,
                 points: resultItems.items,
@@ -257,7 +253,6 @@ export default class Points extends Component {
         let allRows = this.state.grid.reduce((row, value) => {
             return row.concat(value);
         }, []);
-
         let total = allRows.reduce((num, value) => {
 
             if (value === 'X') {
@@ -270,10 +265,8 @@ export default class Points extends Component {
         }, 0);
 
         let items = allRows.map((value) => {
-            return {value: value === undefined ? '0' : value.toString()};
+            return {value: value === undefined ? '' : value.toString()};
         });
-
-        // this.setState({total});
         return {total, items};
     }
 
@@ -367,18 +360,18 @@ export default class Points extends Component {
 
 const styles = StyleSheet.create({
     scroll6: {
-        height: height - 120,
+        height: height * 2/3,
         margin: 5,
         alignSelf: 'center'
     },
     scroll3: {
-        height: height + 70,
+        height: height - 60,
         margin: 5,
         alignSelf: 'center'
     },
     gridItem: {
         width: width / 8,
-        height: width / 8,
+        height: width / 12,
         backgroundColor: '#82b1ff',
         borderColor: '#486087',
         margin: 2,
@@ -389,7 +382,7 @@ const styles = StyleSheet.create({
     },
     gridItemSelected: {
         width: width / 8,
-        height: width / 8,
+        height: width / 12,
         backgroundColor: '#3fdb83',
         borderColor: '#486087',
         margin: 2,
@@ -400,7 +393,7 @@ const styles = StyleSheet.create({
     },
     gridItemTotal: {
         width: width / 8,
-        height: width / 8,
+        height: width / 12,
         backgroundColor: '#486087',
         borderColor: '#486087',
         borderWidth: 1,
@@ -410,7 +403,7 @@ const styles = StyleSheet.create({
     },
     gridItemValue: {
         alignSelf: 'center',
-        fontSize: 20,
+        fontSize: 19,
         fontWeight: 'bold',
         color: 'white',
         textShadowColor: '#353d49',

@@ -16,7 +16,11 @@ export default class Info extends Component {
 
     static navigationOptions = (Platform.OS === 'android') ? {header: null} : {};
 
-    render(){
-        return (<View><Text>asd</Text></View>)
+    render() {
+        return (
+            <View>
+                <Text>ANDROID BOUUU</Text>
+            </View>
+        )
     }
 }

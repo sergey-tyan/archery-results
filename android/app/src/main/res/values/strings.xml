@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">das</string>
+    <string name="app_name">Archery Results</string>
+    <string name="RNB_GOOGLE_PLAY_LICENSE_KEY">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4StNlFKkgOlGhRJiiHjeo3jgsFDRq+SnZb5t2Tcg84G8TFRMXhDajiaOG6kFEZl+0AFZTQamsVB3JEgKFmFYYyoXq2n528FxKY2Vnv0LqUpAiquMi1tfbyqJu667ojCBSMcb9JrsrfvtgEJxPh0P4oFH6dCC3Na613jHKrBaGbg/+rXfpJT9CgvJBR9uk9oommFVvnL3ZfkhOY4SflR9tzRcg0oGmURGKnzOX0jr/etHRh3nJU4mFQjzLEHvvNV2SMxXJZsMdiSVAZUII1aOdLDd+Goo4BJQ7fQjmtXu0/m97ujPystblz1A5DAPZi2pN52U0nTxznbCQqVbLyNpZwIDAQAB</string>
 </resources>

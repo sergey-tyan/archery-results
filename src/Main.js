@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
         alignSelf:'center'
     },
     totalProgress:{
-        backgroundColor:'#fff268',
+        backgroundColor:'#fca80c',
         width: width/2,
         alignSelf:'center'
     },

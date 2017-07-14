@@ -1,4 +1,4 @@
-package com.das;
+package com.sergeytyan.archeryresults;
 
 import com.facebook.react.ReactActivity;
 
