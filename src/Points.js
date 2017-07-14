@@ -9,13 +9,14 @@ import {
     ScrollView,
     Platform,
     Button,
-    Alert
+    Alert,
+    BackHandler
 } from "react-native";
 import {
     AdMobInterstitial
 } from 'react-native-admob';
 
-import { ARROWS_3, ANDROID_AD_ID, IOS_AD_ID  } from "./constants";
+import { ARROWS_3, ANDROID_AD_ID, IOS_AD_ID } from "./constants";
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
@@ -41,12 +42,19 @@ export default class Points extends Component {
     constructor(props) {
         super(props);
         AdMobInterstitial.requestAd();
-        AdMobInterstitial.isReady(()=> {
+        AdMobInterstitial.isReady(() => {
             this.setState({canShowAd: true})
         });
 
-
-
+        if (Platform.OS === 'android') {
+            BackHandler.addEventListener('hardwareBackPress', () => {
+                if (this.state.showKeyboard) {
+                    this.setState({showKeyboard: false});
+                    return true;
+                }
+                return false;
+            });
+        }
     }
 
     componentWillMount() {
@@ -197,7 +205,7 @@ export default class Points extends Component {
                         ended: true,
                         selectedItem: {row: -1, col: -1}
                     }, () => {
-                        if(this.state.canShowAd){
+                        if (this.state.canShowAd) {
                             AdMobInterstitial.showAd();
                         }
                         this.updateRealm();
@@ -293,29 +301,31 @@ export default class Points extends Component {
         Clipboard.setString(text);
     }
 
-    showAlert(){
+    showAlert() {
         Alert.alert(
             null,
             'Confirm removing Result',
             [
-                {text: 'Remove', onPress: () => {
+                {
+                    text: 'Remove', onPress: () => {
                     if (this.state.dbItem) {
                         realm.write(() => {
                             realm.delete(this.state.dbItem);
                         });
                     }
                     this.props.navigation.goBack();
-                }},
+                }
+                },
                 {text: 'Cancel', style: 'cancel'}
             ],
-            { cancelable: true }
+            {cancelable: true}
         )
     }
 
     render() {
         return (
-            <View style={{flex: 1}}>
-                <ScrollView contentContainerStyle={styles.scroll}>
+            <View style={styles.mainContainer}>
+                <ScrollView contentContainerStyle={this.state.maxRow === 6 ? styles.scroll6 : styles.scroll3}>
                     {this.renderGrid()}
                     <Text style={styles.totalText}>Total: {this.countTotal().total}</Text>
                     <View style={{flex: 1, justifyContent: 'flex-start'}}>
@@ -339,7 +349,9 @@ export default class Points extends Component {
                             <Button
                                 color={'#e84a4a'}
                                 title={'Remove'}
-                                onPress={() => {this.showAlert()}}
+                                onPress={() => {
+                                    this.showAlert()
+                                }}
                             />
                         </View>
                     </View>
@@ -354,8 +366,13 @@ export default class Points extends Component {
 }
 
 const styles = StyleSheet.create({
-    scroll: {
-        height: height + 50,
+    scroll6: {
+        height: height - 120,
+        margin: 5,
+        alignSelf: 'center'
+    },
+    scroll3: {
+        height: height + 70,
         margin: 5,
         alignSelf: 'center'
     },
@@ -363,7 +380,8 @@ const styles = StyleSheet.create({
         width: width / 8,
         height: width / 8,
         backgroundColor: '#82b1ff',
-        borderColor: 'black',
+        borderColor: '#486087',
+        margin: 2,
         borderWidth: 1,
         alignContent: 'center',
         justifyContent: 'center',
@@ -372,8 +390,9 @@ const styles = StyleSheet.create({
     gridItemSelected: {
         width: width / 8,
         height: width / 8,
-        backgroundColor: '#3fd34b',
-        borderColor: 'black',
+        backgroundColor: '#3fdb83',
+        borderColor: '#486087',
+        margin: 2,
         borderWidth: 1,
         alignContent: 'center',
         justifyContent: 'center',
@@ -383,14 +402,20 @@ const styles = StyleSheet.create({
         width: width / 8,
         height: width / 8,
         backgroundColor: '#486087',
-        borderColor: 'black',
+        borderColor: '#486087',
         borderWidth: 1,
+        margin: 2,
         alignContent: 'center',
         justifyContent: 'center',
     },
     gridItemValue: {
         alignSelf: 'center',
-        fontSize: 20
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+        textShadowColor: '#353d49',
+        textShadowRadius: 5,
+        textShadowOffset: {width: 1, height: 1},
     },
     keyboardItem: {
         width: width / 4 - 5,
@@ -405,7 +430,11 @@ const styles = StyleSheet.create({
     },
     keyboardItemValue: {
         alignSelf: 'center',
-        fontSize: 40
+        fontSize: 40,
+        textShadowColor: '#353d49',
+        textShadowRadius: 5,
+        textShadowOffset: {width: 1, height: 1},
+        fontWeight: 'bold'
     },
     keyboard: {
         margin: 5,
@@ -413,7 +442,16 @@ const styles = StyleSheet.create({
     },
     totalText: {
         fontSize: 25,
-        alignSelf: 'center'
+        alignSelf: 'center',
+        color: 'white',
+        textShadowColor: '#353d49',
+        textShadowRadius: 5,
+        textShadowOffset: {width: 1, height: 1},
+        fontWeight: 'bold'
+    },
+    mainContainer: {
+        flex: 1,
+        backgroundColor: '#353d49'
     }
 
 

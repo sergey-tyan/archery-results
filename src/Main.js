@@ -84,7 +84,6 @@ export default class Main extends Component {
 
     constructor(props) {
         super(props);
-        console.log('CONSTRUCTOR LOGS');
         const ds = new ListView.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2
         });
@@ -154,9 +153,6 @@ export default class Main extends Component {
     renderModal() {
         return (
             <View style={styles.modalContainer}>
-                <Text style={styles.modalText}>
-                    Shooting mode
-                </Text>
                 <View style={styles.rowContainer}>
                     <Button
                         title={'Outdoor 6 arrows x 6 rounds'}
@@ -168,7 +164,7 @@ export default class Main extends Component {
                     />
                     <Button
                         title={'Indoor 3 arrows x 10 rounds'}
-                        color={'#609dff'}
+                        color={'#21a5d1'}
                         onPress={() => {
                             this.setModalVisible(false);
                             this.props.navigation.navigate('Points',{ mode:ARROWS_3, lastId: this.state.lastId });
@@ -216,19 +212,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-start',
         alignItems: 'center',
-        backgroundColor: '#F5FCFF',
+        backgroundColor: '#353d49',
     },
     modalContainer: {
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
-
-        width: height / 2,
-        height: height / 4,
+        backgroundColor: '#353d49',
+        width: width,
+        height: height,
         alignSelf: 'center',
-        marginTop: height / 6,
-        borderRadius: 10,
-        borderStyle: 'solid',
-        borderColor: 'red',
     },
     rowContainer: {
         margin: 10
@@ -242,16 +234,19 @@ const styles = StyleSheet.create({
         width: width,
         justifyContent: 'flex-start',
         alignSelf: 'center',
-        borderWidth: 1,
         borderStyle: 'solid',
-        borderColor: '#21a5d1',
-        flexDirection:'row'
+        borderBottomColor: '#353d49',
+        borderBottomWidth: 2,
+        flexDirection:'row',
     },
     itemText: {
         fontSize: 20,
         textAlign: 'center',
         margin: 10,
-        color: 'black',
+        color: 'white',
+        textShadowColor:'#353d49',
+        textShadowRadius:5,
+        textShadowOffset: {width: 1, height: 1}
     },
     list: {
         flexDirection: 'column',
@@ -260,15 +255,18 @@ const styles = StyleSheet.create({
     },
     totalDone:{
         backgroundColor:'#3fdb83',
-        width: width/2
+        width: width/2,
+        alignSelf:'center'
     },
     totalProgress:{
-        backgroundColor:'#def24b',
-        width: width/2
+        backgroundColor:'#fff268',
+        width: width/2,
+        alignSelf:'center'
     },
     date:{
         width: width/2,
-        backgroundColor:'#aac8ff'
+        backgroundColor:'#aac8ff',
+        alignSelf:'center'
     }
 });
 
