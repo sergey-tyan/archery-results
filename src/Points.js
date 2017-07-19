@@ -10,12 +10,13 @@ import {
     Platform,
     Button,
     Alert,
-    BackHandler
+    BackHandler,
+    AsyncStorage
 } from "react-native";
 import {
     AdMobInterstitial
 } from 'react-native-admob';
-
+import I18n from 'react-native-i18n';
 import { ARROWS_3, ANDROID_AD_ID, IOS_AD_ID } from "./constants";
 
 const height = Dimensions.get('window').height;
@@ -60,6 +61,12 @@ export default class Points extends Component {
     componentWillMount() {
         let currentId;
         let dbItem = null;
+
+        AsyncStorage.getItem('ads_removed').then(val => {
+            if(val){
+                this.setState({canShowAd: false});
+            }
+        });
 
         let ended = false;
         if (this.props.navigation.state.params.lastId != undefined) {
@@ -290,17 +297,17 @@ export default class Points extends Component {
             total += curSum;
         }
 
-        text += 'Total: ' + total;
+        text += I18n.t('total') + total;
         Clipboard.setString(text);
     }
 
     showAlert() {
         Alert.alert(
             null,
-            'Confirm removing Result',
+            I18n.t('confirm'),
             [
                 {
-                    text: 'Remove', onPress: () => {
+                    text: I18n.t('remove'), onPress: () => {
                     if (this.state.dbItem) {
                         realm.write(() => {
                             realm.delete(this.state.dbItem);
@@ -309,7 +316,7 @@ export default class Points extends Component {
                     this.props.navigation.goBack();
                 }
                 },
-                {text: 'Cancel', style: 'cancel'}
+                {text: I18n.t('cancel'), style: 'cancel'}
             ],
             {cancelable: true}
         )
@@ -320,20 +327,20 @@ export default class Points extends Component {
             <View style={styles.mainContainer}>
                 <ScrollView contentContainerStyle={this.state.maxRow === 6 ? styles.scroll6 : styles.scroll3}>
                     {this.renderGrid()}
-                    <Text style={styles.totalText}>Total: {this.countTotal().total}</Text>
+                    <Text style={styles.totalText}>{I18n.t('total')} {this.countTotal().total}</Text>
                     <View style={{flex: 1, justifyContent: 'flex-start'}}>
                         {
                             this.state.showKeyboard &&
                             (<View>
                                 <Button
-                                    title={'Done'}
+                                    title={I18n.t('done')}
                                     onPress={() => this.setState({showKeyboard: false})}
                                 />
                             </View>)
                         }
                         <View>
                             <Button
-                                title={'Copy'}
+                                title={I18n.t('copy')}
                                 color={'#3fdb83'}
                                 onPress={() => this.copyToClipboard()}
                             />
@@ -341,7 +348,7 @@ export default class Points extends Component {
                         <View>
                             <Button
                                 color={'#e84a4a'}
-                                title={'Remove'}
+                                title={I18n.t('remove')}
                                 onPress={() => {
                                     this.showAlert()
                                 }}

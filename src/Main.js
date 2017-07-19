@@ -22,7 +22,7 @@ const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 import { ARROWS_3, ARROWS_6 } from './constants';
 import { ListView } from 'realm/react-native';
-
+import I18n from 'react-native-i18n';
 const sample = [
     {
         date: moment().format("YYYY.MM.DD HH:mm"),
@@ -72,6 +72,42 @@ const sample = [
     }
 ];
 
+I18n.fallbacks = true;
+I18n.translations = {
+    en: {
+        indoor:'Indoor 3 arrows x 10 rounds',
+        outdoor:'Outdoor 6 arrows x 6 rounds',
+        cancel:'Cancel',
+        total:'Total: ',
+        copy:'Copy',
+        remove:'Remove',
+        done:'Done',
+        confirm:'Confirm removing',
+        buy1: 'Remove ads',
+        buy2: 'Remove ads and donate $3',
+        buy3: 'Remove ads and donate $31',
+        info: 'Simple app for storing archery training results.',
+        thanks: 'Thank you for your purchase. You will not see ads again',
+        restore: 'Restore purchases',
+    },
+    ru: {
+        indoor:'10 серий по 3 стрелы',
+        outdoor:'6 серий по 6 стрел',
+        cancel:'Отмена',
+        total:'Сумма: ',
+        copy:'Копировать',
+        remove:'Удалить',
+        done:'Готово',
+        confirm:'Подтвердите удаление',
+        buy1: 'Убрать рекламу',
+        buy2: 'Убрать рекламу и пожертвовать $3',
+        buy3: 'Убрать рекламу и пожертвовать $31',
+        info: 'Простое приложение для хранения результатов тренировок по стрельбе из лука.',
+        thanks: 'Спасибо за покупку. Больше рекламу вы не увидите',
+        restore: 'Восстановить покупки',
+    }
+};
+
 export default class Main extends Component {
 
     static navigationOptions = ({navigation}) => {
@@ -87,6 +123,8 @@ export default class Main extends Component {
         const ds = new ListView.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2
         });
+
+
         this.resultItems = realm.objects('Result').sorted('creationDate', true);
         // if (this.resultItems.length < 1) {
         //     realm.write(() => {
@@ -155,7 +193,7 @@ export default class Main extends Component {
             <View style={styles.modalContainer}>
                 <View style={styles.rowContainer}>
                     <Button
-                        title={'Outdoor 6 arrows x 6 rounds'}
+                        title={I18n.t('outdoor')}
                         color={'#3fdb83'}
                         onPress={() => {
                             this.setModalVisible(false);
@@ -163,7 +201,7 @@ export default class Main extends Component {
                         }}
                     />
                     <Button
-                        title={'Indoor 3 arrows x 10 rounds'}
+                        title={I18n.t('indoor')}
                         color={'#21a5d1'}
                         onPress={() => {
                             this.setModalVisible(false);
@@ -171,7 +209,7 @@ export default class Main extends Component {
                         }}
                     />
                     <Button
-                        title={'Cancel'}
+                        title={I18n.t('cancel')}
                         color={'#e84a4a'}
                         onPress={() => this.setModalVisible(false)}
                     />

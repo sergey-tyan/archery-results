@@ -3,6 +3,7 @@ package com.sergeytyan.archeryresults;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.AlexanderZaytsev.RNI18n.RNI18nPackage;
 import com.idehub.Billing.InAppBillingBridgePackage;
 import com.sbugert.rnadmob.RNAdMobPackage;
 import io.realm.react.RealmReactPackage;
@@ -26,6 +27,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNI18nPackage(),
             new InAppBillingBridgePackage(),
             new RNAdMobPackage(),
             new RealmReactPackage()
