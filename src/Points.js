@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 import {
     Clipboard,
     StyleSheet,
@@ -11,28 +11,52 @@ import {
     Button,
     Alert,
     BackHandler,
-    AsyncStorage
-} from "react-native";
+    AsyncStorage,
+    TouchableOpacity,
+    AppState
+} from 'react-native';
 import {
     AdMobInterstitial
 } from 'react-native-admob';
 import I18n from 'react-native-i18n';
-import { ARROWS_3, ANDROID_AD_ID, IOS_AD_ID } from "./constants";
+import { ARROWS_3 } from './constants';
 
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 import realm from './Realm';
+
+const TouchableElement = Platform.OS === 'android' ? TouchableHighlight : TouchableOpacity ;
+
+const yellowNumber = '#ffef09';
+const redNumber = '#e84542';
+const blueNumber = '#3250ff';
+const blackNumber = '#211d35';
+const whiteNumber = '#fff';
+
 const GridItem = ({value, isTotal, itemSelected, selected}) => {
+    let color = blackNumber;
+    if (isTotal) {
+        color = whiteNumber;
+    } else if (value > 8 || value === 'X') {
+        color = yellowNumber;
+    } else if (value > 6) {
+        color = redNumber;
+    } else if (value > 4) {
+        color = blueNumber;
+    } else if (value > 2) {
+        color = whiteNumber;
+    }
+
     return (
-        <TouchableHighlight onPress={() => {
+        <TouchableElement onPress={() => {
             if (!isTotal) {
                 itemSelected();
             }
         }}>
             <View style={selected ? styles.gridItemSelected : isTotal ? styles.gridItemTotal : styles.gridItem}>
-                <Text style={styles.gridItemValue}>{value}</Text>
+                <Text style={[styles.gridItemValue, {color}]}>{value}</Text>
             </View>
-        </TouchableHighlight>
+        </TouchableElement>
     )
 };
 
@@ -58,18 +82,37 @@ export default class Points extends Component {
         }
     }
 
+    componentDidMount() {
+        AppState.addEventListener('change', this._handleAppStateChange);
+        this.removed = false;
+    }
+
+    componentWillUnmount() {
+        AppState.removeEventListener('change', this._handleAppStateChange);
+        if (!this.removed) {
+            this.updateRealm();
+        }
+    }
+
+    _handleAppStateChange = (nextAppState) => {
+        if (nextAppState === 'inactive') {
+            this.updateRealm();
+        }
+    };
+
+
     componentWillMount() {
         let currentId;
         let dbItem = null;
 
         AsyncStorage.getItem('ads_removed').then(val => {
-            if(val){
+            if (val) {
                 this.setState({canShowAd: false});
             }
         });
 
         let ended = false;
-        if (this.props.navigation.state.params.lastId != undefined) {
+        if (this.props.navigation.state.params.lastId !== undefined) {
             currentId = this.props.navigation.state.params.lastId + 1;
             realm.write(() => {
                 dbItem = realm.create('Result', {
@@ -81,7 +124,7 @@ export default class Points extends Component {
                     type: this.props.navigation.state.params.mode
                 })
             });
-        } else if (this.props.navigation.state.params.itemId != undefined) {
+        } else if (this.props.navigation.state.params.itemId !== undefined) {
             const items = realm.objects('Result').filtered('id == $0', this.props.navigation.state.params.itemId);
             dbItem = items[0];
             currentId = dbItem.id;
@@ -192,7 +235,6 @@ export default class Points extends Component {
         )
     }
 
-
     updateSelectedItem(value) {
 
 
@@ -212,19 +254,19 @@ export default class Points extends Component {
                         if (this.state.canShowAd) {
                             AdMobInterstitial.showAd();
                         }
-                        this.updateRealm();
+
                     });
                 } else {
                     this.setState({
                         grid: newGrid,
                         selectedItem: {row: curRow + 1, col: 0}
-                    }, () => this.updateRealm());
+                    });
                 }
             } else {
                 this.setState({
                     grid: newGrid,
                     selectedItem: {row: curRow, col: curCol + 1}
-                }, () => this.updateRealm());
+                });
             }
         }
     }
@@ -243,16 +285,30 @@ export default class Points extends Component {
     }
 
     renderKeyboardItem(value) {
+
+        let color = blackNumber;
+        let textColor = whiteNumber;
+        if (value > 8 || value === 'X') {
+            color = yellowNumber;
+        } else if (value > 6) {
+            color = redNumber;
+        } else if (value > 4) {
+            color = blueNumber;
+        } else if (value > 2) {
+            color = whiteNumber;
+            textColor = blackNumber;
+        }
+
         return (
-            <TouchableHighlight
+            <TouchableElement
                 underlayColor='#b1bed6'
                 onPress={() => {
                     this.updateSelectedItem(value);
                 }}>
-                <View style={styles.keyboardItem}>
-                    <Text style={styles.keyboardItemValue}>{value}</Text>
+                <View style={[styles.keyboardItem, {backgroundColor: color, borderColor: color }]}>
+                    <Text style={[styles.keyboardItemValue, {color: textColor}]}>{value}</Text>
                 </View>
-            </TouchableHighlight>
+            </TouchableElement>
         )
     };
 
@@ -312,6 +368,7 @@ export default class Points extends Component {
                         realm.write(() => {
                             realm.delete(this.state.dbItem);
                         });
+                        this.removed = true;
                     }
                     this.props.navigation.goBack();
                 }
@@ -367,7 +424,7 @@ export default class Points extends Component {
 
 const styles = StyleSheet.create({
     scroll6: {
-        height: height * 2/3,
+        height: height * 2 / 3,
         margin: 5,
         alignSelf: 'center'
     },
@@ -414,7 +471,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
         textShadowColor: '#353d49',
-        textShadowRadius: 5,
+        textShadowRadius: 1,
         textShadowOffset: {width: 1, height: 1},
     },
     keyboardItem: {
@@ -430,9 +487,9 @@ const styles = StyleSheet.create({
     },
     keyboardItemValue: {
         alignSelf: 'center',
-        fontSize: 40,
+        fontSize: 30,
         textShadowColor: '#353d49',
-        textShadowRadius: 5,
+        textShadowRadius: 1,
         textShadowOffset: {width: 1, height: 1},
         fontWeight: 'bold'
     },

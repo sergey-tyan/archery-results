@@ -12,7 +12,9 @@ import {
     Dimensions,
     Button,
     Modal,
-    TouchableHighlight
+    TouchableHighlight,
+    Platform,
+    Alert
 } from 'react-native';
 
 import moment from 'moment';
@@ -23,86 +25,38 @@ const width = Dimensions.get('window').width;
 import { ARROWS_3, ARROWS_6 } from './constants';
 import { ListView } from 'realm/react-native';
 import I18n from 'react-native-i18n';
-const sample = [
-    {
-        date: moment().format("YYYY.MM.DD HH:mm"),
-        total: 234,
-        distance: 70,
-        points: {
-            type: ARROWS_3,
-            scores: [[9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10],
-                [9, 9, 10]]
-        }
-    },
-    {
-        date: moment().format("YYYY.MM.DD HH:mm"),
-        total: 150,
-        distance: 70,
-        points: {
-            type: ARROWS_6,
-            scores: [[9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10]]
-        }
-    },
-    {
-        date: moment().format("YYYY.MM.DD HH:mm"),
-        total: 150,
-        distance: 70,
-        points: {
-            type: ARROWS_6,
-            scores: [[9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10],
-                [9, 9, 10, 10, 10, 10]]
-        }
-    }
-];
 
 I18n.fallbacks = true;
 I18n.translations = {
     en: {
-        indoor:'Indoor 3 arrows x 10 rounds',
-        outdoor:'Outdoor 6 arrows x 6 rounds',
-        cancel:'Cancel',
-        total:'Total: ',
-        copy:'Copy',
-        remove:'Remove',
-        done:'Done',
-        confirm:'Confirm removing',
+        indoor: 'Indoor 3 arrows x 10 rounds',
+        outdoor: 'Outdoor 6 arrows x 6 rounds',
+        cancel: 'Cancel',
+        total: 'Total: ',
+        copy: 'Copy',
+        remove: 'Remove',
+        done: 'Done',
+        confirm: 'Confirm removing',
         buy1: 'Remove ads',
         buy2: 'Remove ads and donate $3',
         buy3: 'Remove ads and donate $31',
-        info: 'Simple app for storing archery training results.',
+        info: 'Simple app for storing archery training results. Press "Add new" to create new record.',
         thanks: 'Thank you for your purchase. You will not see ads again',
         restore: 'Restore purchases',
     },
     ru: {
-        indoor:'10 серий по 3 стрелы',
-        outdoor:'6 серий по 6 стрел',
-        cancel:'Отмена',
-        total:'Сумма: ',
-        copy:'Копировать',
-        remove:'Удалить',
-        done:'Готово',
-        confirm:'Подтвердите удаление',
+        indoor: '10 серий по 3 стрелы',
+        outdoor: '6 серий по 6 стрел',
+        cancel: 'Отмена',
+        total: 'Сумма: ',
+        copy: 'Копировать',
+        remove: 'Удалить',
+        done: 'Готово',
+        confirm: 'Подтвердите удаление',
         buy1: 'Убрать рекламу',
         buy2: 'Убрать рекламу и пожертвовать $3',
         buy3: 'Убрать рекламу и пожертвовать $31',
-        info: 'Простое приложение для хранения результатов тренировок по стрельбе из лука.',
+        info: 'Простое приложение для хранения результатов тренировок по стрельбе из лука. Нажмите "Add new", чтобы добавить новую запись.',
         thanks: 'Спасибо за покупку. Больше рекламу вы не увидите',
         restore: 'Восстановить покупки',
     }
@@ -114,7 +68,17 @@ export default class Main extends Component {
         return {
             title: 'Archery Results',
             headerRight: <Button title="Add new" onPress={() => navigation.state.params.setModalVisible(true)}/>,
-            headerLeft: <Button title="Info" onPress={() => navigation.navigate('Info')}/>
+            headerLeft: <Button title="Info" onPress={() => {
+                if (Platform === 'android') {
+                    navigation.navigate('Info')
+                } else {
+                    Alert.alert(
+                        'Info',
+                        I18n.t('info'),
+                    );
+                }
+
+            }}/>
         }
     };
 
@@ -124,27 +88,14 @@ export default class Main extends Component {
             rowHasChanged: (r1, r2) => r1 !== r2
         });
 
-
         this.resultItems = realm.objects('Result').sorted('creationDate', true);
-        // if (this.resultItems.length < 1) {
-        //     realm.write(() => {
-        //         realm.create('Result', {
-        //             id:1,
-        //             creationDate: new Date(),
-        //             done: false,
-        //             total: 300,
-        //             points: [{value: 'X'}, {value: '10'}, {value: 'X'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}, {value: '10'}],
-        //             type: ARROWS_3
-        //         });
-        //     });
-        // }
         let lastId = 0;
-        if(this.resultItems.length > 0){
+        if (this.resultItems.length > 0) {
             lastId = this.resultItems[0].id;
         }
 
         this.resultItems.addListener((collection) => {
-            if(collection.length > 0) {
+            if (collection.length > 0) {
                 lastId = collection[0].id;
             }
 
@@ -156,6 +107,8 @@ export default class Main extends Component {
             modalVisible: false,
             lastId
         }
+
+        this.renderItem = this.renderItem.bind(this);
     }
 
     componentDidMount() {
@@ -169,8 +122,8 @@ export default class Main extends Component {
 
     renderItem(item) {
         return (
-            <TouchableHighlight onPress={()=>{
-                this.props.navigation.navigate('Points',{ mode:item.type, itemId: item.id })
+            <TouchableHighlight onPress={() => {
+                this.props.navigation.navigate('Points', {mode: item.type, itemId: item.id})
             }}>
                 <View style={styles.itemContainer}>
                     <View style={item.done ? styles.totalDone : styles.totalProgress}>
@@ -180,7 +133,7 @@ export default class Main extends Component {
                     </View>
                     <View style={styles.date}>
                         <Text style={styles.itemText}>
-                            {moment(item.creationDate).format("YYYY.MM.DD HH:mm")}
+                            {moment(item.creationDate).format('YYYY.MM.DD HH:mm')}
                         </Text>
                     </View>
                 </View>
@@ -197,7 +150,7 @@ export default class Main extends Component {
                         color={'#3fdb83'}
                         onPress={() => {
                             this.setModalVisible(false);
-                            this.props.navigation.navigate('Points',{ mode:ARROWS_6, lastId: this.state.lastId });
+                            this.props.navigation.navigate('Points', {mode: ARROWS_6, lastId: this.state.lastId});
                         }}
                     />
                     <Button
@@ -205,7 +158,7 @@ export default class Main extends Component {
                         color={'#21a5d1'}
                         onPress={() => {
                             this.setModalVisible(false);
-                            this.props.navigation.navigate('Points',{ mode:ARROWS_3, lastId: this.state.lastId });
+                            this.props.navigation.navigate('Points', {mode: ARROWS_3, lastId: this.state.lastId});
                         }}
                     />
                     <Button
@@ -222,7 +175,7 @@ export default class Main extends Component {
         return (
             <View style={styles.container}>
                 <Modal
-                    animationType={"fade"}
+                    animationType={'fade'}
                     transparent={false}
                     visible={this.state.modalVisible}
                     supportedOrientations={['portrait']}
@@ -235,7 +188,7 @@ export default class Main extends Component {
 
                 <ListView
                     dataSource={this.state.dataSource}
-                    renderRow={this.renderItem.bind(this)}
+                    renderRow={this.renderItem}
                     style={styles.list}
                     scrollbarStyle="outsideOverlay"
                     enableEmptySections
@@ -265,46 +218,45 @@ const styles = StyleSheet.create({
     },
     modalText: {
         fontSize: 18,
-        margin:5
+        margin: 5
     },
     itemContainer: {
-        height: 50,
         width: width,
-        justifyContent: 'flex-start',
-        alignSelf: 'center',
-        borderStyle: 'solid',
-        borderBottomColor: '#353d49',
+        flexDirection: 'row',
+        alignItems: 'center',
         borderBottomWidth: 2,
-        flexDirection:'row',
+        borderBottomColor: '#353d49'
+
     },
     itemText: {
-        fontSize: 20,
+        fontSize: 18,
         textAlign: 'center',
-        margin: 10,
         color: 'white',
-        textShadowColor:'#353d49',
-        textShadowRadius:5,
-        textShadowOffset: {width: 1, height: 1}
+        textShadowColor: '#353d49',
+        textShadowRadius: 1,
+        textShadowOffset: {width: 1, height: 1},
+        marginTop: 10,
+        marginBottom: 10
     },
     list: {
         flexDirection: 'column',
         width: width,
         marginBottom: 10,
     },
-    totalDone:{
-        backgroundColor:'#3fdb83',
-        width: width/2,
-        alignSelf:'center'
+    totalDone: {
+        backgroundColor: '#3fdb83',
+        width: width / 2,
+
     },
-    totalProgress:{
-        backgroundColor:'#fca80c',
-        width: width/2,
-        alignSelf:'center'
+    totalProgress: {
+        backgroundColor: '#fca80c',
+        width: width / 2,
+
     },
-    date:{
-        width: width/2,
-        backgroundColor:'#aac8ff',
-        alignSelf:'center'
+    date: {
+        width: width / 2,
+        backgroundColor: '#aac8ff',
+        alignSelf: 'center'
     }
 });
 
