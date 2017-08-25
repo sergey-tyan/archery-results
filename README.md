@@ -1,4 +1,4 @@
-# draw-aim-shoot
+# Archery Results
 React Native app (iOS/Android) for archers, training statistics, etc.
 
 Google Play https://play.google.com/store/apps/details?id=com.sergeytyan.archeryresults&hl=en
